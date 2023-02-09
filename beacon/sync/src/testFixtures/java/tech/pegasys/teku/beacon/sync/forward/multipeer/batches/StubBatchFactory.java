@@ -28,6 +28,7 @@ import tech.pegasys.teku.infrastructure.async.eventthread.EventThread;
 import tech.pegasys.teku.infrastructure.unsigned.UInt64;
 import tech.pegasys.teku.networking.eth2.peers.StubSyncSource;
 import tech.pegasys.teku.networking.eth2.peers.SyncSource;
+import tech.pegasys.teku.spec.Spec;
 import tech.pegasys.teku.spec.datastructures.blocks.SignedBeaconBlock;
 import tech.pegasys.teku.statetransition.blobs.BlobsSidecarManager;
 
@@ -35,13 +36,16 @@ public class StubBatchFactory extends BatchFactory implements Iterable<Batch> {
   private final List<Batch> batches = new ArrayList<>();
   private final Map<Batch, BatchSupport> batchSupports = new HashMap<>();
 
+  private final Spec spec;
   private final EventThread eventThread;
   private final boolean enforceEventThread;
 
-  public StubBatchFactory(final EventThread eventThread, boolean enforceEventThread) {
-    super(eventThread, null, BlobsSidecarManager.NOOP);
+  public StubBatchFactory(
+      final Spec spec, final EventThread eventThread, boolean enforceEventThread) {
+    super(spec, eventThread, null, BlobsSidecarManager.NOOP);
     this.eventThread = eventThread;
     this.enforceEventThread = enforceEventThread;
+    this.spec = spec;
   }
 
   public Batch get(final int index) {
@@ -90,7 +94,7 @@ public class StubBatchFactory extends BatchFactory implements Iterable<Batch> {
 
   @Override
   public Batch createBatch(final TargetChain chain, final UInt64 start, final UInt64 count) {
-    final BatchSupport support = new BatchSupport(eventThread, chain, start, count);
+    final BatchSupport support = new BatchSupport(spec, eventThread, chain, start, count);
     batches.add(support.batch);
     // Can look up batch support by either the wrapped or unwrapped batch
     batchSupports.put(support.batch, support);
@@ -118,13 +122,14 @@ public class StubBatchFactory extends BatchFactory implements Iterable<Batch> {
     private boolean markedContested = false;
 
     public BatchSupport(
+        final Spec spec,
         final EventThread eventThread,
         final TargetChain chain,
         final UInt64 start,
         final UInt64 count) {
       batch =
           new SyncSourceBatch(
-              eventThread, this, this, chain, BlobsSidecarManager.NOOP, start, count);
+              spec, eventThread, this, this, chain, BlobsSidecarManager.NOOP, start, count);
       eventThreadOnlyBatch = new EventThreadOnlyBatch(eventThread, batch);
     }
 

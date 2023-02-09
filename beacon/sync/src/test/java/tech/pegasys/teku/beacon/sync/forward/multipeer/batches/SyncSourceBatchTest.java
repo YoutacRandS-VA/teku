@@ -39,6 +39,7 @@ import tech.pegasys.teku.networking.eth2.peers.StubSyncSource;
 import tech.pegasys.teku.networking.eth2.rpc.beaconchain.methods.BlocksByRangeResponseInvalidResponseException;
 import tech.pegasys.teku.networking.eth2.rpc.beaconchain.methods.BlocksByRangeResponseInvalidResponseException.InvalidResponseType;
 import tech.pegasys.teku.networking.p2p.peer.PeerDisconnectedException;
+import tech.pegasys.teku.spec.Spec;
 import tech.pegasys.teku.spec.TestSpecFactory;
 import tech.pegasys.teku.spec.datastructures.blocks.SignedBeaconBlock;
 import tech.pegasys.teku.spec.datastructures.blocks.SlotAndBlockRoot;
@@ -47,9 +48,8 @@ import tech.pegasys.teku.spec.util.DataStructureUtil;
 import tech.pegasys.teku.statetransition.blobs.BlobsSidecarManager;
 
 public class SyncSourceBatchTest {
-
-  private final DataStructureUtil dataStructureUtil =
-      new DataStructureUtil(TestSpecFactory.createMinimalDeneb());
+  private final Spec spec = TestSpecFactory.createMinimalDeneb();
+  private final DataStructureUtil dataStructureUtil = new DataStructureUtil(spec);
   private final TargetChain targetChain =
       chainWith(new SlotAndBlockRoot(UInt64.valueOf(1000), Bytes32.ZERO));
   private final InlineEventThread eventThread = new InlineEventThread();
@@ -232,6 +232,7 @@ public class SyncSourceBatchTest {
     final SyncSourceSelector emptySourceSelector = Optional::empty;
     final SyncSourceBatch batch =
         new SyncSourceBatch(
+            spec,
             eventThread,
             emptySourceSelector,
             conflictResolutionStrategy,
@@ -261,6 +262,7 @@ public class SyncSourceBatchTest {
         };
     final SyncSourceBatch batch =
         new SyncSourceBatch(
+            spec,
             eventThread,
             syncSourceProvider,
             conflictResolutionStrategy,
