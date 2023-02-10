@@ -17,7 +17,8 @@ COPY --from=jre-build /javaruntime $JAVA_HOME
 RUN apt-get -y update && apt-get -y upgrade && apt-get -y install curl git jq docker
 RUN rm -rf /var/lib/api/lists/*
 RUN adduser --disabled-password --gecos "" --home /opt/teku teku && \
-    chown teku:teku /opt/teku
+    chown teku:teku /opt/teku && \
+    chmod 0755 /opt/teku
 
 RUN git clone --depth 1 https://github.com/ConsenSys/teku.git --branch 4844-interop && \
     (cd teku && ./gradlew installDist)
