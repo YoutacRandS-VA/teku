@@ -30,3 +30,26 @@ jobs:
 
       - name: Assemble
         run: ./gradlew --no-daemon --parallel clean compileJava compileTestJava compileJmhJava compileIntegrationTestJava compileAcceptanceTestJava compilePropertyTestJava assemble
+
+      - name: Extract API
+        run: |
+          ./gradlew --no-daemon --parallel installDist
+      
+          mkdir -p .openapidoc/spec
+          build/install/teku/bin/teku --network=mainnet --ee-endpoint=unsafe-test-stub --Xinterop-enabled=true --rest-api-enabled=true --rest-api-docs-enabled=true 2>&1 > teku_output.log &
+          TEKU_PID=$!
+
+          EXIT_CODE=0
+          wget --timeout=30 --retry-connrefused --output-document=.openapidoc/spec/teku.json http://localhost:5051/swagger-docs
+          if [ $? != 0 ]; then
+            EXIT_CODE=1
+          fi
+
+          kill $TEKU_PID
+          exit $EXIT_CODE
+
+      - name: Archive code coverage results
+        uses: actions/upload-artifact@v3
+        with:
+          name: openapi spec
+          path: .openapidoc/spec/teku.json
